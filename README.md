@@ -19,15 +19,23 @@ This model can also make your code consistent, keep you away from switch between
 
 该库还有隐藏节点的功能,达到与ExpandableListView同样的效果(任意层级任意节点可折叠,这是ExpandableLiseView达不到的),并且可以轻松达到header view ,footer view 的效果.一切都由该库的模型掌控, 将数据的操作和视图工具很好地解偶.
 
+##Download
+currently available in jcenter.
+
+via Gradle:
+
+    compile 'cn.okayj:java-util:0.1.0'
+
+
 ##License
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.

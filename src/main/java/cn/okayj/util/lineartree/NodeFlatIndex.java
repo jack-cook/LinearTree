@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cn.okayj.util;
+package cn.okayj.util.lineartree;
 
 
 import java.util.LinkedList;

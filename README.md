@@ -1,4 +1,4 @@
-# JavaUtil
+# LinearTree
 This is a util library for java language.
 The util DataNode in this project is developed mainly to use in Android projects. 
 But it has no dependencies on android framwork. So I extract it to this java project.

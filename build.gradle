@@ -7,7 +7,7 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
 group 'cn.okayj'
-version '0.1.0'
+version '0.2.0'
 
 sourceCompatibility = 1.5
 
@@ -40,8 +40,8 @@ publishing {
         MyPublication(MavenPublication){
             from components.java
             groupId 'cn.okayj'
-            artifactId 'java-util'
-            version '0.1.0'
+            artifactId 'lineartree'
+            version '0.2.0'
 
             artifact sourcesJar
             artifact javadocJar
@@ -55,10 +55,11 @@ bintray {
     publications = ['MyPublication']
     pkg {
         repo = 'maven'
-        name = 'JavaUtil'
+        name = 'LinearTree'
 
         version {
-            name = '0.1.0'
+            name = '0.2.0'
+            vcsTag = 'v0.2.0'
         }
     }
 }

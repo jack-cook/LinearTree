@@ -1,7 +1,7 @@
 # LinearTree
 A java util library mainly for Android application. 
 It is used to build a tree. The tree you built is a little special, from which you can get a particular index. 
-By the index, you can traverse the tree in such an order: A node is visited first, then it's children, finally the same hierarchal level nodes behind it.
+By the index, you can traverse the tree in such an order: A node is visited first, then it's children, finally the same hierarchal level nodes after it.
 It is like table of contents in a book. A chapter's sections are in a deeper hierarchal, but they are listed before the next chapter.
 
 So this util can be used to easily display almost any complex data to ListView or RecyclerView, just like table of contents. What you need to do is just build a tree which has the same structure of the data, and set data to corresponding node, then visit data by the index of that tree. 

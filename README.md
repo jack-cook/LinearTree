@@ -1,14 +1,14 @@
 # LinearTree
 A java util library mainly for Android application. 
 It is used to build a tree. The tree you built is a little special, from which you can get a particular index. 
-By the index, you can traverse the tree in such an order: A node is visited first, then it's children, finally the same hierarchal level nodes behind it will be visited.
-It is like table of contents in a book. A chapter's sections are in a deeper hierarchal, and they are listed before the next chapter.
+By the index, you can traverse the tree in such an order: A node is visited first, then it's children, finally the same hierarchal level nodes behind it.
+It is like table of contents in a book. A chapter's sections are in a deeper hierarchal, but they are listed before the next chapter.
 
 So this util can be used to easily display almost any complex data to ListView or RecyclerView, just like table of contents. What you need to do is just build a tree which has the same structure of the data, and set data to corresponding node, then visit data by the index of that tree. 
 
-Not only that benefits, each node can hide or show all it's child nodes, the index will pass(ignore) a node's child nodes if it hide them. This feature is like ExpandableListView's ability. But Expandable can have two Hierarchies at most, This util is not limited.
+Not only that, each node can hide or show all it's child nodes, the index will pass(ignore) a node's child nodes if the node hides it's children. This feature is like ExpandableListView's ability. But ExpandableListView can have two Hierarchies at most. This util is not limited.
 
-To use this util, you can also benefit from decoupling data and ui. Reusing data between ListView, RecyclerView, LinearLayout or other kind Views is easy.
+To use this util, you can also benefit from decoupling data with ui. Reusing data between ListView, RecyclerView, LinearLayout or other kind Views is easy.
 
 
 一个工具库，用来构造树，所构造的树的特殊之处在于可以获取树的索引，用这个索引能以子节点先于同级节点的顺序遍历树的所有节点，达到的效果与书的目录的编排顺序一致（章节后面是子章节，子章节排完了才是下一个章节）。

@@ -1,23 +1,23 @@
 # LinearTree
-This is a util library for java language.
-The util DataNode in this project is developed mainly to use in Android projects. 
-But it has no dependencies on android framwork. So I extract it to this java project.
-This project is useful in android, and can also in any java program.
+A java util library mainly for Android application. 
+It is used to build a tree. The tree you built is a little special, from which you can get a particular index. 
+By the index, you can traverse the tree in such an order: A node is visited first, then it's children, finally the same hierarchal level nodes behind it will be visited.
+It is like table of contents in a book. A chapter's sections are in a deeper hierarchal, and they are listed before the next chapter.
 
-The DataNode model represent the node in tree. A tree which it built with can easily mapped to a list of nodes. It is very useful to map a tree like data set into ListView or RecyclerView.
-The model keep the structure of tree and you can traverse the tree using it's index(implemented by List). You can modify the tree, the index will update automatically so that you can concentrate on your business without worrying about a certain modification to show data in ListView or RecyclerView.
+So this util can be used to easily display almost any complex data to ListView or RecyclerView, just like table of contents. What you need to do is just build a tree which has the same structure of the data, and set data to corresponding node, then visit data by the index of that tree. 
 
-The DataNode has some useful functions. You can hide any node in a tree, it's index will exclude this node and all it children. Similarly you can just hide childern of one node (Fold in ListView's perspective). So you can use it to achieve the behaviour of ExpandableListView, and the feature is not limited to one hierarchy, any node in any hierarchy of a tree can be folded(collapse).
-This model can also make your code consistent, keep you away from switch between ListView and ExpandableListView.
+Not only that benefits, each node can hide or show all it's child nodes, the index will pass(ignore) a node's child nodes if it hide them. This feature is like ExpandableListView's ability. But Expandable can have two Hierarchies at most, This util is not limited.
+
+To use this util, you can also benefit from decoupling data and ui. Reusing data between ListView, RecyclerView, LinearLayout or other kind Views is easy.
 
 
-这个库主要配合安卓应用中列表(ListView, RecyclerView)的使用. 如果所要开发的列表视图内容比较复杂,包含不同的view type和复杂的层级结构.配合使用该库会让事情变得十分简单.
+一个工具库，用来构造树，所构造的树的特殊之处在于可以获取树的索引，用这个索引能以子节点先于同级节点的顺序遍历树的所有节点，达到的效果与书的目录的编排顺序一致（章节后面是子章节，子章节排完了才是下一个章节）。
 
-这个库目前的主要功能是将树形的数据结构映射到列表结构,类似于书的目录,目录是树形结构的,目录包含章节,章节包含子章节.目录中的内容又是从上到下有序排列的列表形式.
+开发这个库的目的是为了简化安卓应用中依赖列表视图（ListView，RecyclerView）的需求的工作，任何复杂的树状数据结构都可轻松以列表形式排列，达到在ListView或RecyclerView中展示的目的。
 
-使用该库的模型,可以构造一个树,这个树有一个索引(任何节点都可以构造索引),索引类似于目录,可以有序遍历树的节点.因此可以将复杂的树形数据方便地展示到ListView中,无需为如何在ListView中展示而烦恼.
+树的任意节点可以收缩和展开,应用在ListView/RecyclerView中可以达到ExpandableListView的效果,但不限于数据的层级(而ExpandableListView只能展示两层数据).
 
-该库还有隐藏节点的功能,达到与ExpandableListView同样的效果(任意层级任意节点可折叠,这是ExpandableLiseView达不到的),并且可以轻松达到header view ,footer view 的效果.一切都由该库的模型掌控, 将数据的操作和视图工具很好地解偶.
+可以利用树的优势构造任意结构的树,比如靠前的节点作为HeaderView的数据,无需特地为ListView设置HeaderView,也不用为RecyclerView没有HeaderView的功能而烦恼,达到了数据源与视图的解耦.
 
 ## Download
 currently available in jcenter.

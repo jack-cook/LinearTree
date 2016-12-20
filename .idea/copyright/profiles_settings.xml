@@ -1,7 +1,3 @@
 <component name="CopyrightManager">
-  <settings default="AL2.0">
-    <module2copyright>
-      <element module="Project Files" copyright="AL2.0" />
-    </module2copyright>
-  </settings>
+  <settings default="" />
 </component>

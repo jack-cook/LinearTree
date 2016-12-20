@@ -39,7 +39,7 @@ public class NodeFlatIndex {
 
     NodeFlatIndex(DataNode rootNode){
         mRootNode = rootNode;
-        addFlatNodes(null, null, rootNode);
+        addSubtree(null, null, rootNode);
     }
 
     /**
@@ -115,21 +115,21 @@ public class NodeFlatIndex {
 
 
     /**
-     * 将节点展平并添加到索引和可见索引(如果可见索引已创建到话)
-     * @param preCousinNode
-     * @param preVisibleCousinNode
-     * @param addedNode
+     * 将子树展平并添加到索引和可见索引(如果可见索引已创建到话)
+     * @param preSibling
+     * @param preVisibleSibling
+     * @param subtree
      */
-    void addFlatNodes(DataNode preCousinNode,DataNode preVisibleCousinNode,DataNode addedNode){
-        int basePosition = getBasePosition(preCousinNode, addedNode);
+    void addSubtree(DataNode preSibling, DataNode preVisibleSibling, DataNode subtree){
+        int basePosition = getBasePosition(preSibling, subtree);
         int baseVisibleListPosition = 0;
         boolean addToVisibleList = false;
-        baseVisibleListPosition = getVisibleBasePosition(preVisibleCousinNode, addedNode);
-        if(mVisibleList != null && addedNode.isVisible() && baseVisibleListPosition >= 0){
+        baseVisibleListPosition = getVisibleBasePosition(preVisibleSibling, subtree);
+        if(mVisibleList != null && subtree.isVisible() && baseVisibleListPosition >= 0){
             addToVisibleList = true;
         }
 
-        addFlattedNodes(basePosition,baseVisibleListPosition,addedNode,addToVisibleList);
+        addSubtree(basePosition,baseVisibleListPosition,subtree,addToVisibleList);
     }
 
     /**
@@ -149,9 +149,9 @@ public class NodeFlatIndex {
             }
         }
 
-        if(mVisibleList != null && dataNode.isVisible()){
+        if(mVisibleList != null && dataNode.isVisible()){//todo 此处判断有误，这个node可见，不代表其父节点可见，所以并不一定在可见列表中
             int visiblePosition = mVisibleList.indexOf(dataNode);
-            assert visiblePosition >= 0;
+//            assert visiblePosition >= 0;
             if(visiblePosition > 0){
                 for (int i = 0; i < dataNode.getVisibleFlatSize();++i){
                     mVisibleList.remove(visiblePosition);
@@ -229,14 +229,14 @@ public class NodeFlatIndex {
     /**
      * 在添加节点到可见列表前,可用此方法得到
      * 该节点在可见列表中应该在的位置,如果不应该在可见列表中,返回-1
-     * @param preVisibleCousinNode
+     * @param preVisibleSibling
      * @param dataNode
      * @return
      */
-    private int getVisibleBasePosition(DataNode preVisibleCousinNode,DataNode dataNode){
+    private int getVisibleBasePosition(DataNode preVisibleSibling,DataNode dataNode){
         DataNode parentNode = dataNode.getParentNode();
         if(parentNode == null){//根节点
-            assert preVisibleCousinNode == null;
+            assert preVisibleSibling == null;
             return 0;
         }
 
@@ -245,9 +245,9 @@ public class NodeFlatIndex {
             return -1;
         }
 
-        assert mVisibleList.indexOf(preVisibleCousinNode) >= 0;
+        assert mVisibleList.indexOf(preVisibleSibling) >= 0;
 
-        return mVisibleList.indexOf(preVisibleCousinNode) + preVisibleCousinNode.getVisibleFlatSize();
+        return mVisibleList.indexOf(preVisibleSibling) + preVisibleSibling.getVisibleFlatSize();
 
     }
 
@@ -344,14 +344,14 @@ public class NodeFlatIndex {
      * 添加节点树到索引,如果有可见索引,则同时将可见的节点添加到可见索引
      * @param basePosition 添加的最前的位置,后代节点将添加到该位置之后
      * @param baseVisiblePosition 添加的可见索引的最前位置,后代节点将添加到该位置之后
-     * @param rootNode 将要添加到节点树
+     * @param subtree 将要添加到节点树
      * @param addToVisibleList 是否要添加到可见索引(方法外调用时需要判断可见列表是否最在)
      */
-    private void addFlattedNodes(int basePosition,int baseVisiblePosition,DataNode rootNode,boolean addToVisibleList){
-        mList.add(basePosition,rootNode);
+    private void addSubtree(int basePosition, int baseVisiblePosition, DataNode subtree, boolean addToVisibleList){
+        mList.add(basePosition,subtree);
         basePosition++;
         if(addToVisibleList){
-            mVisibleList.add(baseVisiblePosition,rootNode);
+            mVisibleList.add(baseVisiblePosition,subtree);
             baseVisiblePosition ++;
         }
 
@@ -359,34 +359,34 @@ public class NodeFlatIndex {
          *如果本节点未被添加到可见节点列表,或者本节点是折叠状态(子节点不可见),则子节点将不可见,不能添加到可见节点列表
          */
         boolean childHasChanceToAddToVisibleList;
-        if(addToVisibleList /*&& rootNode.isVisible()*/ && !rootNode.isFold()){
+        if(addToVisibleList && subtree.isVisible() && !subtree.isFold()){
             childHasChanceToAddToVisibleList = true;
         }else {
             childHasChanceToAddToVisibleList = false;
         }
 
-        for (int i = 0 ; i< rootNode.getHeaderNodeSize();++i){
-            DataNode node = rootNode.getHeaderNode(i);
+        for (int i = 0 ; i< subtree.getHeaderNodeSize();++i){
+            DataNode node = subtree.getHeaderNode(i);
             boolean childAddToVisibleList = childHasChanceToAddToVisibleList && node.isVisible();
-            addFlattedNodes(basePosition,baseVisiblePosition,node,childAddToVisibleList);
+            addSubtree(basePosition,baseVisiblePosition,node,childAddToVisibleList);
             basePosition += node.getFlatSize();
             if(childAddToVisibleList){
                 baseVisiblePosition += node.getVisibleFlatSize();
             }
         }
-        for (int i = 0 ; i< rootNode.getChildNodeSize();++i){
-            DataNode node = rootNode.getChildNode(i);
+        for (int i = 0 ; i< subtree.getChildNodeSize();++i){
+            DataNode node = subtree.getChildNode(i);
             boolean childAddToVisibleList = childHasChanceToAddToVisibleList && node.isVisible();
-            addFlattedNodes(basePosition,baseVisiblePosition,node,childAddToVisibleList);
+            addSubtree(basePosition,baseVisiblePosition,node,childAddToVisibleList);
             basePosition += node.getFlatSize();
             if(childAddToVisibleList){
                 baseVisiblePosition += node.getVisibleFlatSize();
             }
         }
-        for (int i = 0 ; i< rootNode.getFooterNodeSize();++i){
-            DataNode node = rootNode.getFooterNode(i);
+        for (int i = 0 ; i< subtree.getFooterNodeSize();++i){
+            DataNode node = subtree.getFooterNode(i);
             boolean childAddToVisibleList = childHasChanceToAddToVisibleList && node.isVisible();
-            addFlattedNodes(basePosition,baseVisiblePosition,node,childAddToVisibleList);
+            addSubtree(basePosition,baseVisiblePosition,node,childAddToVisibleList);
             basePosition += node.getFlatSize();
             if(childAddToVisibleList){
                 baseVisiblePosition += node.getVisibleFlatSize();

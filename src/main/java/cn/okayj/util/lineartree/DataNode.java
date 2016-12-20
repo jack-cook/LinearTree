@@ -175,7 +175,7 @@ public class DataNode<S> {
 
         /*int nodeFlatSize = dataNode.getFlatSize();
         onFlatSizeChange(-nodeFlatSize);*/
-        onNodeRemove(dataNode, true);
+        reCalculateStateWhenDescendantRemove(dataNode, true);
         dataNode.mParentNode = null;
         onChildNodeRemoved(dataNode, CHILD_POSITION_HEADER);
         return dataNode;
@@ -195,7 +195,7 @@ public class DataNode<S> {
 
         /*int nodeFlatSize = dataNode.getFlatSize();
         onFlatSizeChange(-nodeFlatSize);*/
-        onNodeRemove(dataNode, true);
+        reCalculateStateWhenDescendantRemove(dataNode, true);
         dataNode.mParentNode = null;
         onChildNodeRemoved(dataNode, CHILD_POSITION_MIDDLE);
         return dataNode;
@@ -214,7 +214,7 @@ public class DataNode<S> {
         DataNode dataNode = mFooterChildNodes.remove(position);
         /*int nodeFlatSize = dataNode.getFlatSize();
         onFlatSizeChange(-nodeFlatSize);*/
-        onNodeRemove(dataNode, true);
+        reCalculateStateWhenDescendantRemove(dataNode, true);
         dataNode.mParentNode = null;
         onChildNodeRemoved(dataNode, CHILD_POSITION_FOOTER);
         return dataNode;
@@ -310,7 +310,8 @@ public class DataNode<S> {
     public final void setVisibility(boolean visibility) {
         if (mVisibility != visibility) {
             mVisibility = visibility;
-            onNodeVisibilityChange(this, visibility);
+
+            onDescendantVisibilityChange(this, visibility);
         }
     }
 
@@ -369,22 +370,26 @@ public class DataNode<S> {
         }
     }
 
-    private void onNodeVisibilityChange(DataNode dataNode, boolean newVisibility) {
-        if(dataNode != this){
+    private void onDescendantVisibilityChange(DataNode descendant, boolean newVisibility) {
+        //todo 可见数量改变不一定会传递到先辈点！！！！！
+
+        boolean cascadeToParent = false;
+
+        if(descendant != this){
             //非自我通知,则为被后代节点通知,因后代节点可见性改变,需更新自己的可见后代数量.
             if(newVisibility == true){
-                mDescendantVisibleSize += dataNode.mDescendantVisibleSize + 1;
+                mDescendantVisibleSize += descendant.mDescendantVisibleSize + 1;
             }else {
-                mDescendantVisibleSize -= dataNode.mDescendantVisibleSize + 1;
+                mDescendantVisibleSize -= descendant.mDescendantVisibleSize + 1;
             }
         }
 
         if (mNodeFlatIndex != null) {
-            mNodeFlatIndex.onNodeVisibilityChange(getPreVisibleCousinNode(dataNode), dataNode, newVisibility);
+            mNodeFlatIndex.onNodeVisibilityChange(getPreVisibleSibling(descendant), descendant, newVisibility);
         }
 
         if (mParentNode != null) {
-            mParentNode.onNodeVisibilityChange(dataNode, newVisibility);
+            mParentNode.onDescendantVisibilityChange(descendant, newVisibility);
         }
     }
 
@@ -416,19 +421,19 @@ public class DataNode<S> {
         nodes.addAll(mFooterChildNodes);
         int index = nodes.indexOf(dataNode);
 
-        DataNode preVisibleCousinNode = getPreVisibleCousinNode(dataNode);
+        DataNode preVisibleSibling = getPreVisibleSibling(dataNode);
 
 
         if (index == 0) {
-            onNodeAdd(null, null, dataNode, true);
+            reCalculateStateWhenDescendantAdd(null, null, dataNode, true);
         } else {
-            onNodeAdd(nodes.get(index - 1), preVisibleCousinNode, dataNode, true);
+            reCalculateStateWhenDescendantAdd(nodes.get(index - 1), preVisibleSibling, dataNode, true);
         }
 
         onChildNodeAdded(dataNode, position);
     }
 
-    private DataNode getPreVisibleCousinNode(DataNode dataNode) {
+    private DataNode getPreVisibleSibling(DataNode dataNode) {
         //TODO 效率优化
         DataNode parent = dataNode.getParentNode();
         assert parent != null;
@@ -440,79 +445,78 @@ public class DataNode<S> {
 
         int index = nodes.indexOf(dataNode);
 
-        DataNode preVisibleCousinNode = null;
+        DataNode preVisibleSibling = null;
         for (int i = index - 1; i >= 0; i--) {
-            preVisibleCousinNode = nodes.get(i);
-            if (preVisibleCousinNode.isVisible()) {
+            preVisibleSibling = nodes.get(i);
+            if (preVisibleSibling.isVisible()) {
                 break;
             }
-            preVisibleCousinNode = null;
+            preVisibleSibling = null;
         }
 
-        return preVisibleCousinNode;
+        return preVisibleSibling;
     }
 
     /**
      * 当有节点树被添加到该节点树的某一节点后会被调用,在此方法中
      * 做节点树状相应的状态的更新,并通知父节点(递归).
      *
-     * @param preCousinNode
-     * @param addedNode
-     * @param descendantVisibleSizeChange 节点到增加是否会引起可见的节点数量的改变
+     * @param preSibling
+     * @param descendant
+     * @param cascadeVisibleFlatSizeChange 节点到增加是否会引起可见的节点数量的改变
      */
-    private void onNodeAdd(DataNode preCousinNode, DataNode preVisibleCousinNode, DataNode addedNode, boolean descendantVisibleSizeChange) {
-        mDescendantSize += addedNode.getFlatSize();
-        if (descendantVisibleSizeChange == true) {
-            mDescendantVisibleSize += addedNode.getVisibleFlatSize();
+    private void reCalculateStateWhenDescendantAdd(DataNode preSibling, DataNode preVisibleSibling, DataNode descendant, boolean cascadeVisibleFlatSizeChange) {
+        mDescendantSize += descendant.getFlatSize();
+        if (cascadeVisibleFlatSizeChange == true) {
+            mDescendantVisibleSize += descendant.getVisibleFlatSize();
         }
 
         if (mParentNode != null) {
-            boolean parentNodeVisibleSizeChange = false;
-            /*
-            *如果本节点的后代可见节点数改变了,并且本节点的后代节点可见(本节点可见并为展开状态),
-            * 可见后代节点数的改变会传递到父节点.
-             */
-            if (descendantVisibleSizeChange && mVisibility && !mIsFolded) {
-                parentNodeVisibleSizeChange = true;
+            boolean cascadeVisibleFlatSizeChangeToParent = false;
+
+            //如果本节点的子节点可见，则继续传播，如果本节点的子节点不可见，则打断了子孙节点可见性的改变的传播路径
+            if (cascadeVisibleFlatSizeChange && mVisibility && !mIsFolded) {
+                cascadeVisibleFlatSizeChangeToParent = true;
             }
 
             /*
             *递归调用父节点
             */
-            mParentNode.onNodeAdd(preCousinNode, preVisibleCousinNode, addedNode, parentNodeVisibleSizeChange);
+            mParentNode.reCalculateStateWhenDescendantAdd(preSibling, preVisibleSibling, descendant, cascadeVisibleFlatSizeChangeToParent);
         }
 
         /*
         *将新添加进来到节点树添加到本节点树到索引中(如果本节点树创建了索引的话)
          */
         if (mNodeFlatIndex != null) {
-            mNodeFlatIndex.addFlatNodes(preCousinNode, preVisibleCousinNode, addedNode);
+            mNodeFlatIndex.addSubtree(preSibling, preVisibleSibling, descendant);
         }
     }
 
     /**
-     * 当有节点树从该节点树到某一后代节点删除会被调用,在此方法中
+     * 某一个子孙节点被删除时
      * 做节点树相应状态的更新,并通知其父节点(递归)
      *
-     * @param dataNode
+     * @param descent
+     * @param cascadeVisibleFlatSizeChange 子孙的移除是否引起该节点可见节点数的改变
      */
-    private void onNodeRemove(DataNode dataNode, boolean mDescendantFlatSizeChange) {
-        mDescendantSize -= dataNode.getFlatSize();
-        if (mDescendantFlatSizeChange) {
-            mDescendantVisibleSize -= dataNode.getVisibleFlatSize();
+    private void reCalculateStateWhenDescendantRemove(DataNode descent, boolean cascadeVisibleFlatSizeChange) {
+        mDescendantSize -= descent.getFlatSize();
+        if (cascadeVisibleFlatSizeChange) {
+            mDescendantVisibleSize -= descent.getVisibleFlatSize();
         }
 
         if (mParentNode != null) {
-            boolean parentDescendantFlatSizeChange = false;
-            if (mDescendantFlatSizeChange && mVisibility && !mIsFolded) {
-                parentDescendantFlatSizeChange = true;
+            boolean cascadeVisibleFlatSizeChangeToParent = false;
+            if (cascadeVisibleFlatSizeChange && mVisibility && !mIsFolded) {
+                cascadeVisibleFlatSizeChangeToParent = true;
             }
 
-            mParentNode.onNodeRemove(dataNode, parentDescendantFlatSizeChange);
+            mParentNode.reCalculateStateWhenDescendantRemove(descent, cascadeVisibleFlatSizeChangeToParent);
         }
 
         if (mNodeFlatIndex != null) {
-            mNodeFlatIndex.removeFlatNodes(dataNode);
+            mNodeFlatIndex.removeFlatNodes(descent);
         }
     }
 }

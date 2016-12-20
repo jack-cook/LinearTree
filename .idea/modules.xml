@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/LinearTree.iml" filepath="$PROJECT_DIR$/.idea/modules/LinearTree.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/util_main.iml" filepath="$PROJECT_DIR$/.idea/modules/util_main.iml" group="util" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/util_test.iml" filepath="$PROJECT_DIR$/.idea/modules/util_test.iml" group="util" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/util.iml" filepath="$PROJECT_DIR$/.idea/modules/util.iml" />
     </modules>
   </component>
 </project>

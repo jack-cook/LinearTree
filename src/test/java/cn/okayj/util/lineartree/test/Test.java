@@ -13,18 +13,26 @@ public class Test {
     private NodeFlatIndex.VisibleFlatIndex visibleFlatIndex;
 
     public Test(){
-        number = new Num(1);
-        number.add(new Num(2));
-        Num temp = new Num(3);
-        temp.add(new Num(4));
-        temp.add(new Num(5));
-        temp.add(new Num(6));
-        number.add(temp);
-        temp = new Num(7);
-        temp.add(new Num(8));
-        temp.add(new Num(9));
-        number.add(temp);
+        Num one = new Num(1);
+        Num two = new Num(2);
+        Num three = new Num(3);
+        Num four = new Num(4);
+        Num five = new Num(5);
+        Num six = new Num(6);
+        Num seven = new Num(7);
+        Num eight = new Num(8);
+        Num nine = new Num(9);
 
+        one.add(two);
+        one.add(three);
+            three.add(four);
+            three.add(five);
+            three.add(six);
+        one.add(seven);
+            seven.add(eight);
+            seven.add(nine);
+
+        number = one;
         root = TreeBuilder.build(number);
         flatIndex = root.getFlatIndex();
         visibleFlatIndex = flatIndex.getVisibleIndex();
@@ -39,14 +47,28 @@ public class Test {
 
     @org.junit.Test
     public void remove5(){
+        print("init state");
         outline();
+
+        print("remove 5");
         flatIndex.get(4).removeFromParent();
         outline();
+
+        print("hide 3");
         flatIndex.get(2).setVisibility(false);
         outline();
+
+        print("remove 4");
         flatIndex.get(3).removeFromParent();
+        outline();
+
+        print("show 3");
         flatIndex.get(2).setVisibility(true);
         outline();
+    }
+
+    public static void print(String msg){
+        System.out.println(msg);
     }
 
     public static void print(DataNode<Num> node,int dep){

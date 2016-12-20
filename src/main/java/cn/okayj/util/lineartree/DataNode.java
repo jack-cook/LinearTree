@@ -80,14 +80,6 @@ public class DataNode<S> {
      * @param headerNode
      */
     public final void addHeaderNode(DataNode headerNode) {
-        /*headerNode.setParentNode(this);
-        mHeaderChildNodes.add(headerNode);
-        int nodeFlatSize = headerNode.getFlatSize();
-        *//*mDescendantSize += nodeFlatSize;
-        if(mParentNode != null){
-            mParentNode.onFlatSizeChange(nodeFlatSize);
-        }*//*
-        onFlatSizeChange(nodeFlatSize);*/
         addHeaderNode(mHeaderChildNodes.size(), headerNode);
     }
 
@@ -99,10 +91,8 @@ public class DataNode<S> {
     public final void addHeaderNode(int position, DataNode headerNode) {
         headerNode.setParentNode(this);
         mHeaderChildNodes.add(position, headerNode);
-        /*int nodeFlatSize = headerNode.getFlatSize();
-        onFlatSizeChange(nodeFlatSize);*/
 
-        onInternalNodeAdd(headerNode, CHILD_POSITION_HEADER);
+        onInternalChildAdd(headerNode, CHILD_POSITION_HEADER);
     }
 
     /**
@@ -122,10 +112,8 @@ public class DataNode<S> {
     public final void addChildNode(int position, DataNode childNode) {
         childNode.setParentNode(this);
         mChildNodes.add(position, childNode);
-        /*int nodeFlatSize = childNode.getFlatSize();
-        onFlatSizeChange(nodeFlatSize);
-*/
-        onInternalNodeAdd(childNode, CHILD_POSITION_MIDDLE);
+
+        onInternalChildAdd(childNode, CHILD_POSITION_MIDDLE);
     }
 
     /**
@@ -145,10 +133,8 @@ public class DataNode<S> {
     public final void addFooterNode(int position, DataNode footerNode) {
         footerNode.setParentNode(this);
         mFooterChildNodes.add(position, footerNode);
-        /*int nodeFlatSize = footerNode.getFlatSize();
-        onFlatSizeChange(nodeFlatSize);*/
 
-        onInternalNodeAdd(footerNode, CHILD_POSITION_FOOTER);
+        onInternalChildAdd(footerNode, CHILD_POSITION_FOOTER);
     }
 
     public final boolean removeHeaderNode(DataNode dataNode) {
@@ -163,11 +149,7 @@ public class DataNode<S> {
     public final DataNode removeHeaderNode(int position) {
         DataNode dataNode = mHeaderChildNodes.remove(position);
 
-        /*int nodeFlatSize = dataNode.getFlatSize();
-        onFlatSizeChange(-nodeFlatSize);*/
-        reCalculateStateWhenDescendantRemove(dataNode, true);
-        dataNode.mParentNode = null;
-        onChildNodeRemoved(dataNode, CHILD_POSITION_HEADER);
+        onInternalChildRemove(dataNode,CHILD_POSITION_MIDDLE);
         return dataNode;
     }
 
@@ -183,11 +165,7 @@ public class DataNode<S> {
     public final DataNode removeChildNode(int position) {
         DataNode dataNode = mChildNodes.remove(position);
 
-        /*int nodeFlatSize = dataNode.getFlatSize();
-        onFlatSizeChange(-nodeFlatSize);*/
-        reCalculateStateWhenDescendantRemove(dataNode, true);
-        dataNode.mParentNode = null;
-        onChildNodeRemoved(dataNode, CHILD_POSITION_MIDDLE);
+        onInternalChildRemove(dataNode,CHILD_POSITION_MIDDLE);
         return dataNode;
     }
 
@@ -202,11 +180,7 @@ public class DataNode<S> {
 
     public final DataNode removeFooterNode(int position) {
         DataNode dataNode = mFooterChildNodes.remove(position);
-        /*int nodeFlatSize = dataNode.getFlatSize();
-        onFlatSizeChange(-nodeFlatSize);*/
-        reCalculateStateWhenDescendantRemove(dataNode, true);
-        dataNode.mParentNode = null;
-        onChildNodeRemoved(dataNode, CHILD_POSITION_FOOTER);
+        onInternalChildRemove(dataNode,CHILD_POSITION_MIDDLE);
         return dataNode;
     }
 
@@ -303,20 +277,19 @@ public class DataNode<S> {
 
             mVisibility = visibility;
 
-            int visibleFlatSizeAfter = getVisibleFlatSize();
-
-            int deltaDescendantFlatSize = 0;
-            int deltaVisibleDescendantFlatSize = 0;
-
-            deltaVisibleDescendantFlatSize = visibleFlatSizeAfter - visibleFlatSizeBefore;
 
             if (mParentNode != null) {
+                int visibleFlatSizeAfter = getVisibleFlatSize();
+                int deltaDescendantFlatSize = 0;
+                int deltaVisibleDescendantFlatSize = 0;
+                deltaVisibleDescendantFlatSize = visibleFlatSizeAfter - visibleFlatSizeBefore;
+
                 mParentNode.notifyDescendantStateChange(deltaDescendantFlatSize, deltaVisibleDescendantFlatSize);
 
-                DataNode preVisibleSibling = getPreVisibleSibling(this);
-                notifyVisibilityChangeToFlatIndex(preVisibleSibling, this, visibility);
             }
 
+            DataNode preVisibleSibling = getPreVisibleSibling(this);
+            notifyVisibilityChangeToFlatIndex(preVisibleSibling, this, visibility);
         }
     }
 
@@ -331,18 +304,18 @@ public class DataNode<S> {
 
             mIsFolded = isFolded;
 
-            int visibleFlatSizeAfter = getVisibleFlatSize();
-
-            int deltaDescendantFlatSize = 0;
-            int deltaVisibleDescendantFlatSize = 0;
-
-            deltaVisibleDescendantFlatSize = visibleFlatSizeAfter - visibleFlatSizeBefore;
 
             if (mParentNode != null) {
-                mParentNode.notifyDescendantStateChange(deltaDescendantFlatSize, deltaVisibleDescendantFlatSize);
+                int visibleFlatSizeAfter = getVisibleFlatSize();
+                int deltaDescendantFlatSize = 0;
+                int deltaVisibleDescendantFlatSize = 0;
+                deltaVisibleDescendantFlatSize = visibleFlatSizeAfter - visibleFlatSizeBefore;
 
-                notifyFoldStateChangeToFlatIndex(this,isFolded);
+                mParentNode.notifyDescendantStateChange(deltaDescendantFlatSize, deltaVisibleDescendantFlatSize);
             }
+
+            notifyFoldStateChangeToFlatIndex(this, isFolded);
+
         }
     }
 
@@ -389,9 +362,23 @@ public class DataNode<S> {
         }
     }
 
+    /**
+     * 直接子节点添加
+     *
+     * @param dataNode
+     * @param position
+     */
+    private void onInternalChildAdd(DataNode dataNode, int position) {
+        /*
+        更新受影响的先辈节点的状态
+         */
+        int deltaDescendantSize = dataNode.getFlatSize();
+        int deltaVisibleDescendantSize = dataNode.getVisibleFlatSize();
+        notifyDescendantStateChange(deltaDescendantSize, deltaVisibleDescendantSize);
 
-    private void onInternalNodeAdd(DataNode dataNode, int position) {
-
+        /*
+        添加到index
+         */
         //TODO 效率优化
         List<DataNode> nodes = new ArrayList<DataNode>();
         nodes.addAll(mHeaderChildNodes);
@@ -400,15 +387,36 @@ public class DataNode<S> {
         int index = nodes.indexOf(dataNode);
 
         DataNode preVisibleSibling = getPreVisibleSibling(dataNode);
-
-
-        if (index == 0) {
-            reCalculateStateWhenDescendantAdd(null, null, dataNode, true);
-        } else {
-            reCalculateStateWhenDescendantAdd(nodes.get(index - 1), preVisibleSibling, dataNode, true);
+        DataNode preSibling = null;
+        if (index > 0) {
+            preSibling = nodes.get(index - 1);
         }
+        addSubtreeToFlatIndex(preSibling, preVisibleSibling, dataNode);
 
+        /*
+        回掉给子类
+         */
         onChildNodeAdded(dataNode, position);
+    }
+
+    private void onInternalChildRemove(DataNode dataNode, int position) {
+        /*
+        更新受影响的先辈节点的状态
+         */
+        int deltaDescendantSize = -dataNode.getFlatSize();
+        int deltaVisibleDescendantSize = -dataNode.getVisibleFlatSize();
+        notifyDescendantStateChange(deltaDescendantSize, deltaVisibleDescendantSize);
+
+        /*
+        从index中删除
+         */
+        removeSubtreeFromFlatIndex(dataNode);
+
+        dataNode.mParentNode = null;
+        /*
+        回掉给子类
+         */
+        onChildNodeRemoved(dataNode,position);
     }
 
     private DataNode getPreVisibleSibling(DataNode dataNode) {
@@ -443,6 +451,7 @@ public class DataNode<S> {
      * @param descendant
      * @param cascadeVisibleFlatSizeChange 节点到增加是否会引起可见的节点数量的改变
      */
+    @Deprecated
     private void reCalculateStateWhenDescendantAdd(DataNode preSibling, DataNode preVisibleSibling, DataNode descendant, boolean cascadeVisibleFlatSizeChange) {
         mDescendantSize += descendant.getFlatSize();
         if (cascadeVisibleFlatSizeChange == true) {
@@ -509,8 +518,7 @@ public class DataNode<S> {
         mDescendantSize += deltaDescendantSize;
         mDescendantVisibleSize += deltaVisibleDescendantSize;
 
-        DataNode parent = getParentNode();
-        if (parent != null) {
+        if (mParentNode != null) {
 
             //判断可见子孙节点数量的改变是否继续传递下去
             if (deltaVisibleDescendantSize != 0 && (!mVisibility || mIsFolded)) {
@@ -518,7 +526,7 @@ public class DataNode<S> {
             }
 
             if (deltaDescendantSize != 0 && deltaVisibleDescendantSize != 0)
-                parent.notifyDescendantStateChange(deltaDescendantSize, deltaVisibleDescendantSize);
+                mParentNode.notifyDescendantStateChange(deltaDescendantSize, deltaVisibleDescendantSize);
         }
     }
 
@@ -542,6 +550,7 @@ public class DataNode<S> {
 
     /**
      * 节点折叠状态改变，更新visibleFlatIndex
+     *
      * @param node
      * @param currentFolded
      */
@@ -553,6 +562,24 @@ public class DataNode<S> {
         if (mParentNode != null) {
             mParentNode.notifyFoldStateChangeToFlatIndex(node, currentFolded);
         }
+    }
+
+    private void addSubtreeToFlatIndex(DataNode preSibling, DataNode preVisibleSibling, DataNode subtree) {
+        if (mNodeFlatIndex != null) {
+            mNodeFlatIndex.addSubtree(preSibling, preVisibleSibling, subtree);
+        }
+
+        if (mParentNode != null)
+            mParentNode.addSubtreeToFlatIndex(preSibling, preVisibleSibling, subtree);
+    }
+
+    private void removeSubtreeFromFlatIndex(DataNode subtree) {
+        if (mNodeFlatIndex != null) {
+            mNodeFlatIndex.removeFlatNodes(subtree);
+        }
+
+        if (mParentNode != null)
+            mParentNode.removeSubtreeFromFlatIndex(subtree);
     }
 
 }

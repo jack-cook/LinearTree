@@ -443,69 +443,6 @@ public class DataNode<S> {
         return preVisibleSibling;
     }
 
-    /**
-     * 当有节点树被添加到该节点树的某一节点后会被调用,在此方法中
-     * 做节点树状相应的状态的更新,并通知父节点(递归).
-     *
-     * @param preSibling
-     * @param descendant
-     * @param cascadeVisibleFlatSizeChange 节点到增加是否会引起可见的节点数量的改变
-     */
-    @Deprecated
-    private void reCalculateStateWhenDescendantAdd(DataNode preSibling, DataNode preVisibleSibling, DataNode descendant, boolean cascadeVisibleFlatSizeChange) {
-        mDescendantSize += descendant.getFlatSize();
-        if (cascadeVisibleFlatSizeChange == true) {
-            mDescendantVisibleSize += descendant.getVisibleFlatSize();
-        }
-
-        if (mParentNode != null) {
-            boolean cascadeVisibleFlatSizeChangeToParent = false;
-
-            //如果本节点的子节点可见，则继续传播，如果本节点的子节点不可见，则打断了子孙节点可见性的改变的传播路径
-            if (cascadeVisibleFlatSizeChange && mVisibility && !mIsFolded) {
-                cascadeVisibleFlatSizeChangeToParent = true;
-            }
-
-            /*
-            *递归调用父节点
-            */
-            mParentNode.reCalculateStateWhenDescendantAdd(preSibling, preVisibleSibling, descendant, cascadeVisibleFlatSizeChangeToParent);
-        }
-
-        /*
-        *将新添加进来到节点树添加到本节点树到索引中(如果本节点树创建了索引的话)
-         */
-        if (mNodeFlatIndex != null) {
-            mNodeFlatIndex.addSubtree(preSibling, preVisibleSibling, descendant);
-        }
-    }
-
-    /**
-     * 某一个子孙节点被删除时
-     * 做节点树相应状态的更新,并通知其父节点(递归)
-     *
-     * @param descent
-     * @param cascadeVisibleFlatSizeChange 子孙的移除是否引起该节点可见节点数的改变
-     */
-    private void reCalculateStateWhenDescendantRemove(DataNode descent, boolean cascadeVisibleFlatSizeChange) {
-        mDescendantSize -= descent.getFlatSize();
-        if (cascadeVisibleFlatSizeChange) {
-            mDescendantVisibleSize -= descent.getVisibleFlatSize();
-        }
-
-        if (mParentNode != null) {
-            boolean cascadeVisibleFlatSizeChangeToParent = false;
-            if (cascadeVisibleFlatSizeChange && mVisibility && !mIsFolded) {
-                cascadeVisibleFlatSizeChangeToParent = true;
-            }
-
-            mParentNode.reCalculateStateWhenDescendantRemove(descent, cascadeVisibleFlatSizeChangeToParent);
-        }
-
-        if (mNodeFlatIndex != null) {
-            mNodeFlatIndex.removeFlatNodes(descent);//todo 节点的状态都更新完毕了，这时flatindex中节点数与状态不一致？？
-        }
-    }
 
 
     /**

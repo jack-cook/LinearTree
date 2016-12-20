@@ -47,16 +47,6 @@ public class DataNode<S> {
     private int mDescendantSize = 0;
     private int mDescendantVisibleSize = 0;
 
-    @Deprecated
-    /**
-     * 用onNodeAdd()和onNodeRemove()实现
-     */
-    private final void onFlatSizeChange(int minusOrPlus) {
-        mDescendantSize += minusOrPlus;
-        if (mParentNode != null) {
-            mParentNode.onFlatSizeChange(minusOrPlus);
-        }
-    }
 
     private void setParentNode(DataNode parentNode) {
         mParentNode = parentNode;
@@ -309,9 +299,24 @@ public class DataNode<S> {
      */
     public final void setVisibility(boolean visibility) {
         if (mVisibility != visibility) {
+            int visibleFlatSizeBefore = getVisibleFlatSize();
+
             mVisibility = visibility;
 
-            onDescendantVisibilityChange(this, visibility);
+            int visibleFlatSizeAfter = getVisibleFlatSize();
+
+            int deltaDescendantFlatSize = 0;
+            int deltaVisibleDescendantFlatSize = 0;
+
+            deltaVisibleDescendantFlatSize = visibleFlatSizeAfter - visibleFlatSizeBefore;
+
+            if (mParentNode != null) {
+                mParentNode.notifyDescendantStateChange(deltaDescendantFlatSize, deltaVisibleDescendantFlatSize);
+
+                DataNode preVisibleSibling = getPreVisibleSibling(this);
+                notifyVisibilityChangeToFlatIndex(preVisibleSibling, this, visibility);
+            }
+
         }
     }
 
@@ -322,8 +327,22 @@ public class DataNode<S> {
      */
     public final void setIsFolded(boolean isFolded) {
         if (mIsFolded != isFolded) {
+            int visibleFlatSizeBefore = getVisibleFlatSize();
+
             mIsFolded = isFolded;
-            onNodeFoldStateChange(this, isFolded);
+
+            int visibleFlatSizeAfter = getVisibleFlatSize();
+
+            int deltaDescendantFlatSize = 0;
+            int deltaVisibleDescendantFlatSize = 0;
+
+            deltaVisibleDescendantFlatSize = visibleFlatSizeAfter - visibleFlatSizeBefore;
+
+            if (mParentNode != null) {
+                mParentNode.notifyDescendantStateChange(deltaDescendantFlatSize, deltaVisibleDescendantFlatSize);
+
+                notifyFoldStateChangeToFlatIndex(this,isFolded);
+            }
         }
     }
 
@@ -370,47 +389,6 @@ public class DataNode<S> {
         }
     }
 
-    private void onDescendantVisibilityChange(DataNode descendant, boolean newVisibility) {
-        //todo 可见数量改变不一定会传递到先辈点！！！！！
-
-        boolean cascadeToParent = false;
-
-        if(descendant != this){
-            //非自我通知,则为被后代节点通知,因后代节点可见性改变,需更新自己的可见后代数量.
-            if(newVisibility == true){
-                mDescendantVisibleSize += descendant.mDescendantVisibleSize + 1;
-            }else {
-                mDescendantVisibleSize -= descendant.mDescendantVisibleSize + 1;
-            }
-        }
-
-        if (mNodeFlatIndex != null) {
-            mNodeFlatIndex.onNodeVisibilityChange(getPreVisibleSibling(descendant), descendant, newVisibility);
-        }
-
-        if (mParentNode != null) {
-            mParentNode.onDescendantVisibilityChange(descendant, newVisibility);
-        }
-    }
-
-    private void onNodeFoldStateChange(DataNode dataNode, boolean currentFolded) {
-        if(dataNode != this){
-            //非自我通知,则为被后代节点通知,因后代节点可见性改变,需更新自己的可见后代数量.
-            if(currentFolded == true){
-                mDescendantVisibleSize -= dataNode.mDescendantVisibleSize;
-            }else {
-                mDescendantVisibleSize += dataNode.mDescendantVisibleSize;
-            }
-        }
-
-        if (mNodeFlatIndex != null) {
-            mNodeFlatIndex.onNodeFoldStateChange(dataNode, currentFolded);
-        }
-
-        if (mParentNode != null) {
-            mParentNode.onNodeFoldStateChange(dataNode, currentFolded);
-        }
-    }
 
     private void onInternalNodeAdd(DataNode dataNode, int position) {
 
@@ -516,7 +494,65 @@ public class DataNode<S> {
         }
 
         if (mNodeFlatIndex != null) {
-            mNodeFlatIndex.removeFlatNodes(descent);
+            mNodeFlatIndex.removeFlatNodes(descent);//todo 节点的状态都更新完毕了，这时flatindex中节点数与状态不一致？？
         }
     }
+
+
+    /**
+     * 子孙节点改变，引起先辈节点与子孙节点有关的状态改变
+     *
+     * @param deltaDescendantSize        所导致的 子孙节点数量的增减
+     * @param deltaVisibleDescendantSize 所导致的 子孙节点可见数的增减
+     */
+    private void notifyDescendantStateChange(int deltaDescendantSize, int deltaVisibleDescendantSize) {
+        mDescendantSize += deltaDescendantSize;
+        mDescendantVisibleSize += deltaVisibleDescendantSize;
+
+        DataNode parent = getParentNode();
+        if (parent != null) {
+
+            //判断可见子孙节点数量的改变是否继续传递下去
+            if (deltaVisibleDescendantSize != 0 && (!mVisibility || mIsFolded)) {
+                deltaVisibleDescendantSize = 0;
+            }
+
+            if (deltaDescendantSize != 0 && deltaVisibleDescendantSize != 0)
+                parent.notifyDescendantStateChange(deltaDescendantSize, deltaVisibleDescendantSize);
+        }
+    }
+
+
+    /**
+     * 节点可见状态改变，更新visibleFlatIndex
+     *
+     * @param preVisibleSibling
+     * @param node
+     * @param currentVisibility
+     */
+    private void notifyVisibilityChangeToFlatIndex(DataNode preVisibleSibling, DataNode node, boolean currentVisibility) {
+        if (mNodeFlatIndex != null) {
+            mNodeFlatIndex.onNodeVisibilityChange(preVisibleSibling, node, currentVisibility);
+        }
+
+        if (mParentNode != null) {
+            mParentNode.notifyVisibilityChangeToFlatIndex(preVisibleSibling, node, currentVisibility);
+        }
+    }
+
+    /**
+     * 节点折叠状态改变，更新visibleFlatIndex
+     * @param node
+     * @param currentFolded
+     */
+    private void notifyFoldStateChangeToFlatIndex(DataNode node, boolean currentFolded) {
+        if (mNodeFlatIndex != null) {
+            mNodeFlatIndex.onNodeFoldStateChange(node, currentFolded);
+        }
+
+        if (mParentNode != null) {
+            mParentNode.notifyFoldStateChangeToFlatIndex(node, currentFolded);
+        }
+    }
+
 }

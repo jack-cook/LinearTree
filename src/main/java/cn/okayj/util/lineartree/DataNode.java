@@ -74,6 +74,10 @@ public class DataNode<S> {
         return mParentNode;
     }
 
+    int getDescendantVisibleSize() {
+        return mDescendantVisibleSize;
+    }
+
     /**
      * 设置头部子节点
      *
@@ -216,23 +220,9 @@ public class DataNode<S> {
      * @return
      */
     public final int getVisibleFlatSize() {
-        if (mVisibility == false) {
-            return 0;
-        } else if (mIsFolded == true) {
-            return 1;
-        } else {
-            return mDescendantVisibleSize + 1;
-        }
+        return calculateVisibleFlatSize(mVisibility,mIsFolded,mDescendantVisibleSize);
     }
 
-    /**
-     * 获取树结构的后代对应的可见节点展开之后的大小(即不包括本节点,并且忽略本节点的可见性)
-     *
-     * @return
-     */
-    public final int getDescendantVisibleSize() {
-        return mDescendantVisibleSize;
-    }
 
     public int getHeaderNodeSize() {
         return mHeaderChildNodes.size();
@@ -393,29 +383,23 @@ public class DataNode<S> {
         }
         addSubtreeToFlatIndex(preSibling, preVisibleSibling, dataNode);
 
-        /*
-        回掉给子类
-         */
+        //回掉给子类
         onChildNodeAdded(dataNode, position);
     }
 
     private void onInternalChildRemove(DataNode dataNode, int position) {
-        /*
-        更新受影响的先辈节点的状态
-         */
+        //更新受影响的先辈节点的状态
         int deltaDescendantSize = -dataNode.getFlatSize();
         int deltaVisibleDescendantSize = -dataNode.getVisibleFlatSize();
         notifyDescendantStateChange(deltaDescendantSize, deltaVisibleDescendantSize);
 
-        /*
-        从index中删除
-         */
+
+        //从index中删除
         removeSubtreeFromFlatIndex(dataNode);
 
         dataNode.mParentNode = null;
-        /*
-        回掉给子类
-         */
+
+        //回掉给子类
         onChildNodeRemoved(dataNode,position);
     }
 
@@ -517,6 +501,16 @@ public class DataNode<S> {
 
         if (mParentNode != null)
             mParentNode.removeSubtreeFromFlatIndex(subtree);
+    }
+
+    public static int calculateVisibleFlatSize(boolean visibility, boolean isFolded, int descendantVisibleSize){
+        if (visibility == false) {
+            return 0;
+        } else if (isFolded == true) {
+            return 1;
+        } else {
+            return descendantVisibleSize + 1;
+        }
     }
 
 }

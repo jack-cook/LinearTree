@@ -7,7 +7,11 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
 group 'cn.okayj'
-version '0.2.1'
+version '0.3.0'
+
+ext {
+    versionName = "v0.3.0"
+}
 
 sourceCompatibility = 1.5
 
@@ -41,7 +45,7 @@ publishing {
             from components.java
             groupId 'cn.okayj'
             artifactId 'lineartree'
-            version '0.2.1'
+            version project.version
 
             artifact sourcesJar
             artifact javadocJar
@@ -58,8 +62,8 @@ bintray {
         name = 'LinearTree'
 
         version {
-            name = '0.2.1'
-            vcsTag = 'v0.2.1'
+            name = project.version
+            vcsTag = versionName
         }
     }
 }

@@ -141,13 +141,12 @@ public class DataNode<S> {
         onInternalChildAdd(footerNode, CHILD_POSITION_FOOTER);
     }
 
-    public final boolean removeHeaderNode(DataNode dataNode) {
+    public final int removeHeaderNode(DataNode dataNode) {
         int position = mHeaderChildNodes.indexOf(dataNode);
         if (position >= 0) {
             removeHeaderNode(position);
-            return true;
         }
-        return false;
+        return position;
     }
 
     public final DataNode removeHeaderNode(int position) {
@@ -157,13 +156,12 @@ public class DataNode<S> {
         return dataNode;
     }
 
-    public final boolean removeChildNode(DataNode dataNode) {
+    public final int removeChildNode(DataNode dataNode) {
         int position = mChildNodes.indexOf(dataNode);
         if (position >= 0) {
             removeChildNode(position);
-            return true;
         }
-        return false;
+        return position;
     }
 
     public final DataNode removeChildNode(int position) {
@@ -173,13 +171,12 @@ public class DataNode<S> {
         return dataNode;
     }
 
-    public final boolean removeFooterNode(DataNode dataNode) {
+    public final int removeFooterNode(DataNode dataNode) {
         int position = mFooterChildNodes.indexOf(dataNode);
         if (position >= 0) {
             removeFooterNode(position);
-            return true;
         }
-        return false;
+        return position;
     }
 
     public final DataNode removeFooterNode(int position) {
@@ -198,8 +195,8 @@ public class DataNode<S> {
     }
 
     public final void removeNode(DataNode dataNode) {
-        if (!removeHeaderNode(dataNode)) {
-            if (!removeChildNode(dataNode)) {
+        if (removeHeaderNode(dataNode) < 0) {
+            if (removeChildNode(dataNode) < 0) {
                 removeFooterNode(dataNode);
             }
         }

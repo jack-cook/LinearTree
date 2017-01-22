@@ -341,13 +341,11 @@ public class DataNode<S> {
      * 索引会略微降低性能,所以不用时最好销毁.
      */
     void invalidateFlatIndex() {
-    }
-
-    {
         if (mNodeFlatIndex != null) {
             mNodeFlatIndex = null;
         }
     }
+
 
     /**
      * 直接子节点添加

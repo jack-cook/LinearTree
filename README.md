@@ -24,7 +24,7 @@ currently available in jcenter.
 
 via Gradle:
 
-    compile 'cn.okayj:lineartree:0.2.1'
+    compile 'cn.okayj:lineartree:0.3.1'
 
 ## Demo
 [HierarchicalViewSample][1]

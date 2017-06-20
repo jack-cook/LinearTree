@@ -125,8 +125,8 @@ public class NodeFlatIndex {
         int basePosition = getBasePosition(preSibling, subtree);
         int baseVisibleListPosition = 0;
         boolean addToVisibleList = false;
-        baseVisibleListPosition = getVisibleBasePosition(preVisibleSibling, subtree);
-        if (mVisibleList != null && subtree.isVisible() && baseVisibleListPosition >= 0) {
+        if (mVisibleList != null && subtree.isVisible()) {
+            baseVisibleListPosition = getVisibleBasePosition(preVisibleSibling, subtree);
             addToVisibleList = true;
         }
 
